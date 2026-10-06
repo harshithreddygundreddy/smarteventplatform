@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus Events</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+            color: #111;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .card-luma {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+        }
+        .card-luma:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+    <nav class="fixed w-full z-50 glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="/" class="text-xl font-bold tracking-tight flex items-center gap-2">
+                <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-bolt text-white text-sm"></i>
+                </div>
+                Campus<span class="text-gray-400 font-medium">Events</span>
+            </a>
+            
+            <div class="flex items-center gap-4">
+                {% if user %}
+                    <a href="/dashboard" class="text-sm font-medium text-gray-600 hover:text-black transition-colors px-3 py-2">Dashboard</a>
+                    <a href="/logout" class="text-sm font-medium bg-gray-100 hover:bg-gray-200 text-black px-4 py-2 rounded-full transition-colors">Log out</a>
+                {% else %}
+                    <a href="/login" class="text-sm font-medium text-gray-600 hover:text-black transition-colors px-3 py-2">Log in</a>
+                    <a href="/register" class="text-sm font-medium bg-black text-white hover:bg-gray-800 px-4 py-2 rounded-full transition-colors shadow-md">Sign up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow pt-24 pb-12 px-6">
+        <div class="max-w-5xl mx-auto">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <footer class="py-8 border-t border-gray-100 mt-auto bg-white">
+        <div class="max-w-7xl mx-auto px-6 text-center text-sm text-gray-400">
+            &copy; 2026 Smart Campus Platform. Inspired by modern design.
+        </div>
+    </footer>
+</body>
+</html>

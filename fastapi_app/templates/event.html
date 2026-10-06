@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto mt-6">
+    <a href="/" class="text-sm font-medium text-gray-500 hover:text-black flex items-center gap-2 mb-4 w-fit">
+        <i class="fa-solid fa-arrow-left"></i> Back to events
+    </a>
+    {% set images = {
+        'Hackathon': 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&q=80',
+        'Conference': 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80',
+        'Workshop': 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=1200&q=80',
+        'Exhibition': 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1200&q=80',
+        'Sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80',
+        'Health': 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80',
+        'Networking': 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=1200&q=80'
+    } %}
+    {% set default_image = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200&q=80' %}
+    {% set img_url = images.get(event.category, default_image) %}
+
+    <div class="bg-white rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100">
+        <div class="h-64 bg-gray-100 relative">
+        <img src="{{ img_url }}" class="w-full h-full object-cover" alt="{{ event.title }}">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div class="absolute bottom-6 left-8 right-8">
+            <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold text-white mb-3">
+                {{ event.category }}
+            </span>
+            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight">{{ event.title }}</h1>
+        </div>
+    </div>
+    
+    <div class="p-8 md:p-10">
+        <div class="flex flex-col md:flex-row gap-8">
+            <div class="flex-grow">
+                <div class="prose prose-gray max-w-none mb-10">
+                    <h3 class="text-lg font-semibold mb-4">About</h3>
+                    <p class="text-gray-600 leading-relaxed">{{ event.description }}</p>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
+                    <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
+                        <img src="https://i.pravatar.cc/150?u={{ event.organizer_id }}" alt="Organizer">
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-500">Hosted by</div>
+                        <div class="font-medium">Organizer Name</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full md:w-72 shrink-0">
+                <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100" 
+                     x-data="{ spots_filled: {{ spots_filled }}, capacity: {{ event.capacity }} }"
+                     x-init="
+                        let ws = new WebSocket('ws://' + window.location.host + '/ws/event/{{ event.id }}');
+                        ws.onmessage = function(event) {
+                            let data = JSON.parse(event.data);
+                            if(data.type === 'capacity_update') {
+                                spots_filled = data.spots_filled;
+                                capacity = data.capacity;
+                            }
+                        };
+                     ">
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+                                <i class="fa-regular fa-calendar text-gray-500"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">{{ event.date_time.strftime("%A, %B %d") if event.date_time else 'TBD' }}</div>
+                                <div class="text-sm text-gray-500">{{ event.date_time.strftime("%I:%M %p") if event.date_time else '' }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+                                <i class="fa-solid fa-location-dot text-gray-500"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">{{ event.venue }}</div>
+                                <a href="#" class="text-sm text-blue-500 hover:underline">View Map</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-200" x-data="{ showModal: false }">
+                        {% if registered %}
+                            <button class="w-full py-3 px-4 bg-green-50 text-green-700 font-medium rounded-xl flex items-center justify-center gap-2" disabled>
+                                <i class="fa-solid fa-check-circle"></i> You're registered
+                            </button>
+                        {% else %}
+                            <button @click="{% if user %} showModal = true {% else %} window.location.href='/login?next=/event/{{ event.id }}' {% endif %}" class="w-full py-3 px-4 bg-black text-white hover:bg-gray-800 font-medium rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
+                                Register <i class="fa-solid fa-arrow-right text-sm"></i>
+                            </button>
+                            
+                            <!-- Registration Modal -->
+                            <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                                    <div x-show="showModal" @click="showModal = false" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                                    <div x-show="showModal" class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
+                                        <form action="/event/{{ event.id }}/register" method="post" class="p-8">
+                                            <div class="flex justify-between items-center mb-6">
+                                                <h3 class="text-2xl font-bold" id="modal-title">Complete Registration</h3>
+                                                <button type="button" @click="showModal = false" class="text-gray-400 hover:text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                                            </div>
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number (Optional)</label>
+                                                    <input type="tel" name="phone" placeholder="+1 (555) 000-0000" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-black outline-none bg-gray-50 focus:bg-white">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Dietary Restrictions</label>
+                                                    <select name="dietary" class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-black outline-none bg-gray-50 focus:bg-white">
+                                                        <option value="None">None</option>
+                                                        <option value="Vegetarian">Vegetarian</option>
+                                                        <option value="Vegan">Vegan</option>
+                                                        <option value="Gluten-Free">Gluten-Free</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Why do you want to attend? (Optional)</label>
+                                                    <textarea name="notes" rows="3" placeholder="Tell the organizer a little about yourself..." class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-black outline-none bg-gray-50 focus:bg-white"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="mt-8">
+                                                <button type="submit" class="w-full bg-black text-white px-4 py-3 rounded-xl font-medium hover:bg-gray-800">Submit Registration</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="text-center mt-3 text-xs text-gray-500 font-medium">
+                            <span x-text="spots_filled"></span> / <span x-text="capacity"></span> spots filled
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                            <div class="bg-black h-1.5 rounded-full transition-all duration-500" :style="'width: ' + Math.min((spots_filled / capacity) * 100, 100) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+{% endblock %}
